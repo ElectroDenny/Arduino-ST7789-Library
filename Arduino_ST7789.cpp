@@ -37,6 +37,21 @@ static const uint8_t PROGMEM
     ST7789_DISPON ,   ST_CMD_DELAY,  		// 9: Main screen turn on, no args, w/delay
     255 };                  				// 255 = 500 ms delay
 
+static const uint8_t PROGMEM
+  cmd_240x280[] = {
+    10,
+    ST7789_SWRESET,   ST_CMD_DELAY, 150,
+    ST7789_SLPOUT ,   ST_CMD_DELAY, 255,
+    ST7789_COLMOD , 1+ST_CMD_DELAY, 0x55, 10,
+    ST7789_MADCTL , 1, 0x00,
+    ST7789_CASET  , 4, 0x00, 0x00, 0x00, 239,
+    // RASET: start row = 20 (0x0014), end row = 299 (0x012B)
+    ST7789_RASET  , 4, 0x00, 0x14, 0x01, 0x2B,
+    ST7789_INVON ,   ST_CMD_DELAY, 10,
+    ST7789_NORON  ,   ST_CMD_DELAY, 10,
+    ST7789_DISPON ,   ST_CMD_DELAY, 255
+  };
+
 inline uint16_t swapcolor(uint16_t x) { 
   return (x << 11) | (x & 0x07E0) | (x >> 11);
 }
@@ -240,40 +255,42 @@ void Arduino_ST7789::commonInit(const uint8_t *cmdList) {
 }
 
 void Arduino_ST7789::setRotation(uint8_t m) {
-
   writecommand(ST7789_MADCTL);
-  rotation = m % 4; // can't be higher than 3
+  rotation = m % 4;
   switch (rotation) {
-   case 0:
-     writedata(ST7789_MADCTL_MX | ST7789_MADCTL_MY | ST7789_MADCTL_RGB);
+    case 0:
+      writedata(ST7789_MADCTL_MX | ST7789_MADCTL_MY | ST7789_MADCTL_RGB);
+      _xstart = _colstart;
+      _ystart = _rowstart;
+      break;
+    case 1:
+      writedata(ST7789_MADCTL_MY | ST7789_MADCTL_MV | ST7789_MADCTL_RGB);
+      _ystart = _colstart;
+      _xstart = _rowstart;
+      break;
+    case 2:
+      writedata(ST7789_MADCTL_RGB);
+      _xstart = _colstart;
+      _ystart = _rowstart;
+      break;
+    case 3:
+      writedata(ST7789_MADCTL_MX | ST7789_MADCTL_MV | ST7789_MADCTL_RGB);
+      _ystart = _colstart;
+      _xstart = _rowstart;
+      break;
+  }
 
-     _xstart = _colstart;
-     _ystart = _rowstart;
-     break;
-   case 1:
-     writedata(ST7789_MADCTL_MY | ST7789_MADCTL_MV | ST7789_MADCTL_RGB);
-
-     _ystart = _colstart;
-     _xstart = _rowstart;
-     break;
-  case 2:
-     writedata(ST7789_MADCTL_RGB);
- 
-     _xstart = _colstart;
-     _ystart = _rowstart;
-     break;
-
-   case 3:
-     writedata(ST7789_MADCTL_MX | ST7789_MADCTL_MV | ST7789_MADCTL_RGB);
-
-     _ystart = _colstart;
-     _xstart = _rowstart;
-     break;
+  if (rotation & 1) {
+    // 90° или 270°
+    Adafruit_GFX::_width  = _physical_height;
+    Adafruit_GFX::_height = _physical_width;
+  } else {
+    Adafruit_GFX::_width  = _physical_width;
+    Adafruit_GFX::_height = _physical_height;
   }
 }
 
-void Arduino_ST7789::setAddrWindow(uint8_t x0, uint8_t y0, uint8_t x1,
- uint8_t y1) {
+void Arduino_ST7789::setAddrWindow(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1) {
 
   uint16_t x_start = x0 + _xstart, x_end = x1 + _xstart;
   uint16_t y_start = y0 + _ystart, y_end = y1 + _ystart;
@@ -450,12 +467,21 @@ inline void Arduino_ST7789::DC_LOW(void) {
 void Arduino_ST7789::init(uint16_t width, uint16_t height) {
   commonInit(NULL);
 
-  _colstart = ST7789_240x240_XSTART;
-  _rowstart = ST7789_240x240_YSTART;
-  _height = 240;
-  _width = 240;
+  _physical_width  = width;
+  _physical_height = height;
 
-  displayInit(cmd_240x240);
+  Adafruit_GFX::_width  = width;
+  Adafruit_GFX::_height = height;
+
+  if (width == 240 && height == 280) {
+    _colstart = 0;
+    _rowstart = 20;
+    displayInit(cmd_240x280);
+  } else {
+    _colstart = 0;
+    _rowstart = 0;
+    displayInit(cmd_240x240);
+  }
 
   setRotation(2);
 }

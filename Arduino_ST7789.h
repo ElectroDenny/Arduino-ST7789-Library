@@ -92,7 +92,7 @@ class Arduino_ST7789 : public Adafruit_GFX {
   Arduino_ST7789(int8_t DC, int8_t RST, int8_t SID, int8_t SCLK, int8_t CS = -1);
   Arduino_ST7789(int8_t DC, int8_t RST, int8_t CS = -1);
 
-  void     setAddrWindow(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1),
+  void     setAddrWindow(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1),
            pushColor(uint16_t color),
            fillScreen(uint16_t color),
            drawPixel(int16_t x, int16_t y, uint16_t color),
@@ -124,6 +124,9 @@ class Arduino_ST7789 : public Adafruit_GFX {
   boolean  _hwSPI;
 
   int8_t  _cs, _dc, _rst, _sid, _sclk;
+
+  uint16_t _physical_width;
+  uint16_t _physical_height;
 
 #if defined(USE_FAST_IO)
   volatile RwReg  *dataport, *clkport, *csport, *dcport;
