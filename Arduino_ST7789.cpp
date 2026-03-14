@@ -10,32 +10,41 @@
 #include "wiring_private.h"
 #include <SPI.h>
 
+
+#define ST7789_CASET   0x2A
+#define ST7789_RASET   0x2B
+#define ST7789_RAMWR   0x2C
+#define ST7789_RAMRD   0x2E
+
+#define ST7789_COLMOD  0x3A
+#define ST7789_MADCTL  0x36
+
 static const uint8_t PROGMEM
-  cmd_240x240[] = {                 		// Initialization commands for 7789 screens
-    10,                       				// 9 commands in list:
-    ST7789_SWRESET,   ST_CMD_DELAY,  		// 1: Software reset, no args, w/delay
-      150,                     				// 150 ms delay
-    ST7789_SLPOUT ,   ST_CMD_DELAY,  		// 2: Out of sleep mode, no args, w/delay
-      255,                    				// 255 = 500 ms delay
-    ST7789_COLMOD , 1+ST_CMD_DELAY,  		// 3: Set color mode, 1 arg + delay:
-      0x55,                   				// 16-bit color
-      10,                     				// 10 ms delay
-    ST7789_MADCTL , 1,  					// 4: Memory access ctrl (directions), 1 arg:
-      0x00,                   				// Row addr/col addr, bottom to top refresh
-    ST7789_CASET  , 4,  					// 5: Column addr set, 4 args, no delay:
+  cmd_240x240[] = {                     // Initialization commands for 7789 screens
+    10,                               // 9 commands in list:
+    ST7789_SWRESET,   ST_CMD_DELAY,     // 1: Software reset, no args, w/delay
+      150,                            // 150 ms delay
+    ST7789_SLPOUT ,   ST_CMD_DELAY,     // 2: Out of sleep mode, no args, w/delay
+      255,                            // 255 = 500 ms delay
+    ST7789_COLMOD , 1+ST_CMD_DELAY,     // 3: Set color mode, 1 arg + delay:
+      0x55,                           // 16-bit color
+      10,                             // 10 ms delay
+    ST7789_MADCTL , 1,            // 4: Memory access ctrl (directions), 1 arg:
+      0x00,                           // Row addr/col addr, bottom to top refresh
+    ST7789_CASET  , 4,            // 5: Column addr set, 4 args, no delay:
       0x00, ST7789_240x240_XSTART,          // XSTART = 0
-	  (240+ST7789_240x240_XSTART) >> 8,
-	  (240+ST7789_240x240_XSTART) & 0xFF,   // XEND = 240
-    ST7789_RASET  , 4,  					// 6: Row addr set, 4 args, no delay:
+    (240+ST7789_240x240_XSTART) >> 8,
+    (240+ST7789_240x240_XSTART) & 0xFF,   // XEND = 240
+    ST7789_RASET  , 4,            // 6: Row addr set, 4 args, no delay:
       0x00, ST7789_240x240_YSTART,          // YSTART = 0
       (240+ST7789_240x240_YSTART) >> 8,
-	  (240+ST7789_240x240_YSTART) & 0xFF,	// YEND = 240
-    ST7789_INVON ,   ST_CMD_DELAY,  		// 7: Inversion ON
+    (240+ST7789_240x240_YSTART) & 0xFF, // YEND = 240
+    ST7789_INVON ,   ST_CMD_DELAY,      // 7: Inversion ON
       10,
-    ST7789_NORON  ,   ST_CMD_DELAY,  		// 8: Normal display on, no args, w/delay
-      10,                     				// 10 ms delay
-    ST7789_DISPON ,   ST_CMD_DELAY,  		// 9: Main screen turn on, no args, w/delay
-    255 };                  				// 255 = 500 ms delay
+    ST7789_NORON  ,   ST_CMD_DELAY,     // 8: Normal display on, no args, w/delay
+      10,                             // 10 ms delay
+    ST7789_DISPON ,   ST_CMD_DELAY,     // 9: Main screen turn on, no args, w/delay
+    255 };                          // 255 = 500 ms delay
 
 inline uint16_t swapcolor(uint16_t x) { 
   return (x << 11) | (x & 0x07E0) | (x >> 11);
@@ -102,12 +111,12 @@ inline void Arduino_ST7789::spiwrite(uint8_t c) {
     // Fast SPI bitbang swiped from LPD8806 library
     for(uint8_t bit = 0x80; bit; bit >>= 1) {
 #if defined(USE_FAST_IO)
-	  *clkport &= ~clkpinmask;
+    *clkport &= ~clkpinmask;
       if(c & bit) *dataport |=  datapinmask;
       else        *dataport &= ~datapinmask;
       *clkport |=  clkpinmask;
 #else
-	  digitalWrite(_sclk, LOW);
+    digitalWrite(_sclk, LOW);
       if(c & bit) digitalWrite(_sid, HIGH);
       else        digitalWrite(_sid, LOW);
       digitalWrite(_sclk, HIGH);
@@ -180,15 +189,15 @@ void Arduino_ST7789::commonInit(const uint8_t *cmdList) {
 
   pinMode(_dc, OUTPUT);
   if(_cs) {
-	  pinMode(_cs, OUTPUT);
+    pinMode(_cs, OUTPUT);
   }
 
 #if defined(USE_FAST_IO)
   dcport    = portOutputRegister(digitalPinToPort(_dc));
   dcpinmask = digitalPinToBitMask(_dc);
   if(_cs) {
-	csport    = portOutputRegister(digitalPinToPort(_cs));
-	cspinmask = digitalPinToBitMask(_cs);
+  csport    = portOutputRegister(digitalPinToPort(_cs));
+  cspinmask = digitalPinToBitMask(_cs);
   }
   
 #endif
@@ -412,23 +421,23 @@ void Arduino_ST7789::invertDisplay(boolean i) {
 /******** low level bit twiddling **********/
 
 inline void Arduino_ST7789::CS_HIGH(void) {
-	if(_cs) {
-		#if defined(USE_FAST_IO)
-			*csport |= cspinmask;
-		#else
-		digitalWrite(_cs, HIGH);
-		#endif
-	}
+  if(_cs) {
+    #if defined(USE_FAST_IO)
+      *csport |= cspinmask;
+    #else
+    digitalWrite(_cs, HIGH);
+    #endif
+  }
 }
 
 inline void Arduino_ST7789::CS_LOW(void) {
-	if(_cs) {
-		#if defined(USE_FAST_IO)
-		*csport &= ~cspinmask;
-		#else
-		digitalWrite(_cs, LOW);
-		#endif
-	}
+  if(_cs) {
+    #if defined(USE_FAST_IO)
+    *csport &= ~cspinmask;
+    #else
+    digitalWrite(_cs, LOW);
+    #endif
+  }
 }
 
 inline void Arduino_ST7789::DC_HIGH(void) {
@@ -459,3 +468,53 @@ void Arduino_ST7789::init(uint16_t width, uint16_t height) {
 
   setRotation(2);
 }
+
+
+
+
+// ----------------------------------------------------------
+// fast method to send multiple 16-bit values from RAM via SPI
+inline void Arduino_ST7789::copyMulti(uint8_t *img, uint16_t num)
+{
+  while(num--) { writedata(*(img+1)); writedata(*(img+0)); img+=2; }
+} 
+
+
+// ----------------------------------------------------------
+// draws image from RAM, only basic clipping
+void Arduino_ST7789::drawImage(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t *img16) 
+{
+  // all clipping should be on the application side
+  if(w<=0 || h<=0) return;  // left for compatibility
+  //if(x>=_width || y>=_height || w<=0 || h<=0) return;
+  //if(x+w-1>=_width)  w=_width -x;
+  //if(y+h-1>=_height) h=_height-y;
+  setAddrWindow(x, y, x+w-1, y+h-1);
+
+  copyMulti((uint8_t *)img16, w*h); // assumed w*h will never be >64k
+}
+
+// ----------------------------------------------------------
+// draws image from flash (PROGMEM)
+void Arduino_ST7789::drawImageF(int16_t x, int16_t y, int16_t w, int16_t h, const uint16_t *img16) 
+{
+  if(x>=_width || y>=_height || w<=0 || h<=0) return;
+  setAddrWindow(x, y, x+w-1, y+h-1);
+
+  uint32_t num = (uint32_t)w*h;
+  uint16_t num16 = num>>3;
+  uint8_t *img = (uint8_t *)img16;
+  while(num16--) {
+    writedata(pgm_read_byte(img+1)); writedata(pgm_read_byte(img+0)); img+=2;
+    writedata(pgm_read_byte(img+1)); writedata(pgm_read_byte(img+0)); img+=2;
+    writedata(pgm_read_byte(img+1)); writedata(pgm_read_byte(img+0)); img+=2;
+    writedata(pgm_read_byte(img+1)); writedata(pgm_read_byte(img+0)); img+=2;
+    writedata(pgm_read_byte(img+1)); writedata(pgm_read_byte(img+0)); img+=2;
+    writedata(pgm_read_byte(img+1)); writedata(pgm_read_byte(img+0)); img+=2;
+    writedata(pgm_read_byte(img+1)); writedata(pgm_read_byte(img+0)); img+=2;
+    writedata(pgm_read_byte(img+1)); writedata(pgm_read_byte(img+0)); img+=2;
+  }
+  uint8_t num8 = num & 0x7;
+  while(num8--) { writedata(pgm_read_byte(img+1)); writedata(pgm_read_byte(img+0)); img+=2; }
+}
+
