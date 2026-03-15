@@ -95,16 +95,18 @@ class Arduino_ST7789 : public Adafruit_GFX {
   Arduino_ST7789(int8_t DC, int8_t RST, int8_t SID, int8_t SCLK, int8_t CS = -1);
   Arduino_ST7789(int8_t DC, int8_t RST, int8_t CS = -1);
 
-  void     setAddrWindow(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1),
-           pushColor(uint16_t color),
-           fillScreen(uint16_t color),
-           drawPixel(int16_t x, int16_t y, uint16_t color),
-           drawFastVLine(int16_t x, int16_t y, int16_t h, uint16_t color),
-           drawFastHLine(int16_t x, int16_t y, int16_t w, uint16_t color),
-           fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color),
-           setRotation(uint8_t r),
-           invertDisplay(boolean i),
-		   init(uint16_t width, uint16_t height);
+  void      setSPIFrequency(uint32_t freq),
+            setSPIMode(uint8_t mode),
+            setAddrWindow(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1),
+            pushColor(uint16_t color),
+            fillScreen(uint16_t color),
+            drawPixel(int16_t x, int16_t y, uint16_t color),
+            drawFastVLine(int16_t x, int16_t y, int16_t h, uint16_t color),
+            drawFastHLine(int16_t x, int16_t y, int16_t w, uint16_t color),
+            fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color),
+            setRotation(uint8_t r),
+            invertDisplay(boolean i),
+            init(uint16_t width, uint16_t height);
   uint16_t Color565(uint8_t r, uint8_t g, uint8_t b);
   uint16_t color565(uint8_t r, uint8_t g, uint8_t b) { return Color565(r, g, b); } 
 
@@ -130,6 +132,9 @@ class Arduino_ST7789 : public Adafruit_GFX {
 
   uint16_t _physical_width;
   uint16_t _physical_height;
+
+  uint32_t _spi_freq = 24000000;
+  uint8_t  _spi_mode = SPI_MODE2;
 
 #if defined(USE_FAST_IO)
   volatile RwReg  *dataport, *clkport, *csport, *dcport;

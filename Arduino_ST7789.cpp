@@ -209,18 +209,19 @@ void Arduino_ST7789::commonInit(const uint8_t *cmdList) {
   if (_hwSPI) { // Using hardware SPI
 #if defined(SPI_HAS_TRANSACTION)
     SPI.begin();
-    mySPISettings = SPISettings(24000000, MSBFIRST, SPI_MODE2);
+    mySPISettings = SPISettings(_spi_freq, MSBFIRST, _spi_mode);
 #elif defined(__AVR__) || defined(CORE_TEENSY)
     SPCRbackup = SPCR;
     SPI.begin();
-    SPI.setClockDivider(SPI_CLOCK_DIV4);
-    SPI.setDataMode(SPI_MODE2);
+    // Для AVR и Teensy можно менять только режим, частота остаётся фиксированной
+    SPI.setDataMode(_spi_mode);
+    SPI.setClockDivider(SPI_CLOCK_DIV4); // Можно добавить логику подбора позже
     mySPCR = SPCR; // save our preferred state
     SPCR = SPCRbackup; // then restore
 #elif defined(__SAM3X8E__)
     SPI.begin();
-    SPI.setClockDivider(21); // 4MHz
-    SPI.setDataMode(SPI_MODE2);
+    SPI.setClockDivider(21); // 84MHz/21 = 4MHz (фиксированная частота)
+    SPI.setDataMode(_spi_mode);
 #endif
   } else {
     pinMode(_sclk, OUTPUT);
@@ -482,4 +483,12 @@ void Arduino_ST7789::init(uint16_t width, uint16_t height) {
   }
 
   setRotation(2);
+}
+
+void Arduino_ST7789::setSPIFrequency(uint32_t freq) {
+    _spi_freq = freq;
+}
+
+void Arduino_ST7789::setSPIMode(uint8_t mode) {
+    _spi_mode = mode;
 }
