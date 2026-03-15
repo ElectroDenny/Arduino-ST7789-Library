@@ -187,53 +187,51 @@ void Arduino_ST7789::displayInit(const uint8_t *addr) {
   }
 }
 
-
 // Initialization code common to all ST7789 displays
 void Arduino_ST7789::commonInit(const uint8_t *cmdList) {
   _ystart = _xstart = 0;
-  _colstart  = _rowstart = 0; // May be overridden in init func
+  _colstart = _rowstart = 0; // May be overridden in init func
 
   pinMode(_dc, OUTPUT);
-  if(_cs) {
-	  pinMode(_cs, OUTPUT);
+  if (_cs) {
+    pinMode(_cs, OUTPUT);
   }
 
 #if defined(USE_FAST_IO)
-  dcport    = portOutputRegister(digitalPinToPort(_dc));
+  dcport = portOutputRegister(digitalPinToPort(_dc));
   dcpinmask = digitalPinToBitMask(_dc);
-  if(_cs) {
-	csport    = portOutputRegister(digitalPinToPort(_cs));
-	cspinmask = digitalPinToBitMask(_cs);
+  if (_cs) {
+    csport = portOutputRegister(digitalPinToPort(_cs));
+    cspinmask = digitalPinToBitMask(_cs);
   }
-  
 #endif
 
-  if(_hwSPI) { // Using hardware SPI
-#if defined (SPI_HAS_TRANSACTION)
+  if (_hwSPI) { // Using hardware SPI
+#if defined(SPI_HAS_TRANSACTION)
     SPI.begin();
     mySPISettings = SPISettings(24000000, MSBFIRST, SPI_MODE2);
-#elif defined (__AVR__) || defined(CORE_TEENSY)
+#elif defined(__AVR__) || defined(CORE_TEENSY)
     SPCRbackup = SPCR;
     SPI.begin();
     SPI.setClockDivider(SPI_CLOCK_DIV4);
     SPI.setDataMode(SPI_MODE2);
     mySPCR = SPCR; // save our preferred state
-    SPCR = SPCRbackup;  // then restore
-#elif defined (__SAM3X8E__)
+    SPCR = SPCRbackup; // then restore
+#elif defined(__SAM3X8E__)
     SPI.begin();
-    SPI.setClockDivider(21); //4MHz
+    SPI.setClockDivider(21); // 4MHz
     SPI.setDataMode(SPI_MODE2);
 #endif
   } else {
     pinMode(_sclk, OUTPUT);
-    pinMode(_sid , OUTPUT);
+    pinMode(_sid, OUTPUT);
     digitalWrite(_sclk, LOW);
     digitalWrite(_sid, LOW);
 
 #if defined(USE_FAST_IO)
-    clkport     = portOutputRegister(digitalPinToPort(_sclk));
-    dataport    = portOutputRegister(digitalPinToPort(_sid));
-    clkpinmask  = digitalPinToBitMask(_sclk);
+    clkport = portOutputRegister(digitalPinToPort(_sclk));
+    dataport = portOutputRegister(digitalPinToPort(_sid));
+    clkpinmask = digitalPinToBitMask(_sclk);
     datapinmask = digitalPinToBitMask(_sid);
 #endif
   }
@@ -250,7 +248,7 @@ void Arduino_ST7789::commonInit(const uint8_t *cmdList) {
     delay(50);
   }
 
-  if(cmdList) 
+  if (cmdList)
     displayInit(cmdList);
 }
 
