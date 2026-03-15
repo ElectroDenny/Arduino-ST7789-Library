@@ -33,8 +33,8 @@
   typedef unsigned char prog_uchar;
 #endif
 
-#define ST7789_TFTWIDTH_240 	240
-#define ST7789_TFTHEIGHT_240 	240
+#define ST7789_TFTWIDTH_240   240
+#define ST7789_TFTHEIGHT_240  240
 
 #define ST7789_240x240_XSTART 0
 #define ST7789_240x240_YSTART 0
@@ -106,12 +106,16 @@ class Arduino_ST7789 : public Adafruit_GFX {
             fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color),
             setRotation(uint8_t r),
             invertDisplay(boolean i),
+            drawImage(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t *img),
             init(uint16_t width, uint16_t height);
   uint16_t Color565(uint8_t r, uint8_t g, uint8_t b);
-  uint16_t color565(uint8_t r, uint8_t g, uint8_t b) { return Color565(r, g, b); } 
+  uint16_t color565(uint8_t r, uint8_t g, uint8_t b) { return Color565(r, g, b); }
+  void drawImageF(int16_t x, int16_t y, int16_t w, int16_t h, const uint16_t *img16);
+  void drawImageF(int16_t x, int16_t y, const uint16_t *img16) { drawImageF(x,y,pgm_read_word(img16),pgm_read_word(img16+1),img16+3); } 
 
  protected:
   uint8_t  _colstart, _rowstart, _xstart, _ystart; // some displays need this changed
+  void copyMulti(uint8_t *img, uint16_t num);
 
   void     displayInit(const uint8_t *addr);
   void     spiwrite(uint8_t),
